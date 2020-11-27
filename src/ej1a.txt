@@ -1,0 +1,35 @@
+Queremos ver que State es una mónada. Por lo tanto, queremos verificar
+las siguientes 3 propiedades:
+1) return x >>= f   =   f x
+2) t >>= return     =   t
+3) (t >>= f) >>= g  =  t >>= (λx. f x >>= g)
+
+Tenemos que:
+
+newtype State a = State {runState :: Env → Pair a Env}
+
+y que
+
+return x = State (\s -> (x :!: s))
+
+m >>= f = State (\s -> let (v :!: s') = runState m s in runState (f v) s')
+
+Probemos 1)
+
+return x >>= f
+
+<==> def. >>=
+
+State (λs → let (v :! : s') = runState (return x) s
+            in runState (f v) s')
+
+<==> def. return
+
+State (λs → let (v :! : s') = runState ((State (\s -> (x :!: s))) s)
+            in runState (f v) s')
+
+
+<==> ?????????????
+
+State (λs → let (v :! : s') = runState x
+            in runState (f v) s')
