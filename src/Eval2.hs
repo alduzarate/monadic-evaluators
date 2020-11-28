@@ -44,9 +44,6 @@ instance MonadError StateError where
 
 -- Ejercicio 2.c: Dar una instancia de MonadState para StateError:
 instance MonadState StateError where
-  -- lookfor v = State (\s -> (lookfor' v s :!: s))
-  --   where lookfor' v s = fromJust $ M.lookup v s
-  -- update v i = State (\s -> (() :!: update' v i s)) where update' = M.insert
   lookfor v = StateError(\s ->  case M.lookup v s of
                                   Just n -> Right (n :!: s)
                                   _      -> Left UndefVar)

@@ -19,4 +19,5 @@ class Monad m => MonadError m where
 
 -- Ejercicio 3.b: Dar una clase que provea las operaciones necesarias para
 -- llevar el costo de las operaciones efectuadas. Llamela MonadCost.
-class Monad m => MonadCost 
+class Monad m => MonadCost m where
+    tick :: m ()

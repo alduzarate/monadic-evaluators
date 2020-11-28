@@ -28,8 +28,54 @@ State (λs → let (v :! : s') = runState (return x) s
 State (λs → let (v :! : s') = runState ((State (\s -> (x :!: s))) s)
             in runState (f v) s')
 
+<==> def. runState
 
-<==> ?????????????
-
-State (λs → let (v :! : s') = runState x
+State (λs → let (v :! : s') = \s -> (x :!: s)
             in runState (f v) s')
+
+<==> def. let
+State (\s -> runState (f x) s)
+
+<==> def. mónada State XD
+
+f x
+
+∎
+
+Probemos 2):
+
+t >>= return
+
+<==> def. >>=
+
+State (\s ->  let (v :!: s') = runState t s 
+              in runState (return v) s')
+
+<==> def. return
+
+State (\s ->  let (v :!: s') = runState t s 
+              in runState State (\s -> (v :!: s)) s')
+
+<==> def. runState
+
+State (\s ->  let (v :!: s') = runState t s 
+              in (v :!: s')
+
+<==> def. let
+
+State (\s -> runState t s)
+
+<==> def. mónada State XD
+
+t
+
+∎
+
+Por último, probemos 3): (t >>= f) >>= g  ===  t >>= (λx. f x >>= g)
+
+(t >>= f) >>= g
+
+<==> def. >>=
+
+(State (\s -> let (v :!: s') = runState m s 
+              in runState (f v) s')) >>= g

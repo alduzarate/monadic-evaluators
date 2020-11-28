@@ -1,0 +1,14 @@
+// trabajo: 43
+
+n = 0;
+m = 1;
+i = 0;
+fib = 14;
+temp = 0;
+
+while (i < fib) {
+  temp = n;
+  n = m;
+  m = m + temp;
+  i = i + 1
+}
