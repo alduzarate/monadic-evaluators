@@ -23,15 +23,23 @@ initEnv = M.empty
 -- Ejercicio 3.a: Proponer una nueva monada que lleve el costo de las 
 -- operaciones efectuadas en la computacion, ademas de manejar errores y 
 -- estado, y de su instancia de mónada. Llamela StateErrorCost.
--- COMPLETAR
+newtype StateErrorCost = 
+  StateErrorCost {runStateErrorCost :: Env -> Either Error (Pair a (Cost, Env))}
 
 -- Recuerde agregar las siguientes instancias para calmar al GHC:
--- instance Functor StateErrorCost where
---   fmap = liftM
+instance Functor StateErrorCost where
+  fmap = liftM
 
--- instance Applicative StateErrorCost where
---   pure  = return
---   (<*>) = ap
+instance Applicative StateErrorCost where
+  pure  = return
+  (<*>) = ap
+  
+  
+instance Monad StateErrorCost where
+  return x = StateErrorCost (\(c,s) -> Right (x :!: s))
+  m >>= f  = StateError(\s -> runStateError m s >>= \(v :!: s') -> runStateError (f v) s')
+
+
 
 -- Ejercicio 3.c: Dar una instancia de MonadCost para StateErrorCost.
 -- COMPLETAR
@@ -40,10 +48,11 @@ initEnv = M.empty
 -- COMPLETAR
 
 -- Ejercicio 3.e: Dar una instancia de MonadState para StateErrorCost.
--- COMPLETAR
+
 
 -- Ejercicio 3.f: Implementar el evaluador utilizando la monada StateErrorCost.
 -- Evalua un programa en el estado nulo
+
 eval :: Comm -> Either Error (Env, Cost)
 eval = undefined
 

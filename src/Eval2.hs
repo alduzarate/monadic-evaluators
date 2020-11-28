@@ -35,13 +35,8 @@ instance Applicative StateError where
 
 -- Ejercicio 2.a: Dar una instancia de Monad para StateError:
 instance Monad StateError where
-  -- instance Monad State where
-  --return x = State (\s -> (x :!: s))
-  --m >>= f = State (\s -> let (v :!: s') = runState m s in runState (f v) s')
   return x = StateError (\s -> Right (x :!: s))
   m >>= f  = StateError(\s -> runStateError m s >>= \(v :!: s') -> runStateError (f v) s')
-  -- Left error >>= f = StateError Left error
-  -- Right m >>= f = StateError (\s -> let (v :!: s') = runStateError m s in runStateError (f v) s')
 
 -- Ejercicio 2.b: Dar una instancia de MonadError para StateError:
 instance MonadError StateError where
