@@ -10,9 +10,9 @@ newtype State a = State {runState :: Env → Pair a Env}
 
 y que
 
-return x = State (\s -> (x :!: s))
+return x = State (λs -> (x :!: s))
 
-m >>= f = State (\s -> let (v :!: s') = runState m s 
+m >>= f = State (λs -> let (v :!: s') = runState m s 
                        in runState (f v) s')
 
 
@@ -27,25 +27,25 @@ State (λs → let (v :! : s') = runState (return x) s
 
 <==> def. return
 
-State (λs → let (v :! : s') = runState (State (\s -> (x :!: s))) s
+State (λs → let (v :! : s') = runState (State (λs -> (x :!: s))) s
             in runState (f v) s')
 
 <==> def. runState
 
-State (λs → let (v :! : s') = (\s -> (x :!: s)) s
+State (λs → let (v :! : s') = (λs -> (x :!: s)) s
             in runState (f v) s')
 
-<==> beta reduccion ??
+<==> β-redex
 State (λs → let (v :! : s') = (x :!: s)
             in runState (f v) s')
 
 <==> def. let
-State (\s -> runState (f x) s)
+State (λs -> runState (f x) s)
 
-<==> etH?a red
+<==> η-red
 State(runState (f x)) 
 
-<==>  f x es de la forma State h => runState (State h) = h => tengo State(h) que asumi que era f x PFFFFFFFFFFF MIND BLOWN
+<==>  f x es de la forma State h => runState (State h) = h => tengo State(h) que asumi que era f x 
 
 f x
 
@@ -57,24 +57,24 @@ t >> return
 
 <==> def. >>=
 
-State (\s ->  let (v :!: s') = runState t s 
+State (λs ->  let (v :!: s') = runState t s 
               in runState (return v) s')
 
 <==> def. return
 
-State (\s ->  let (v :!: s') = runState t s 
-              in runState State (\s -> (v :!: s)) s')
+State (λs ->  let (v :!: s') = runState t s 
+              in runState State (λs -> (v :!: s)) s')
 
 <==> def. runState
 
-State (\s ->  let (v :!: s') = runState t s 
+State (λs ->  let (v :!: s') = runState t s 
               in (v :!: s')
 
 <==> def. let
 
-State (\s -> runState t s)
+State (λs -> runState t s)
 
-<==> eta reduccion
+<==> η-red
 
 State(runState t)
 
@@ -86,75 +86,68 @@ t
 
 Por último, probemos 3): (t >>= f) >>= g  ===  t >>= (λx. f x >>= g)
 
-remember:
-return x = State (\s -> (x :!: s))
-
-m >>= f = State (\s -> let (v :!: s') = runState m s 
-                       in runState (f v) s')
-
 (t >>= f) >>= g
 
-<==> def. 1er >>=
+<==> def. >>=
 
-(State (\s -> let (v :!: s') = runState t s 
+(State (λs -> let (v :!: s') = runState t s 
               in runState (f v) s')) >>= g
 
 
 
 <==>  def. >>=
 
-State (\w -> let (u :!: w') = runState (State (\s -> let (v :!: s') = runState t s 
+State (λw -> let (u :!: w') = runState (State (λs -> let (v :!: s') = runState t s 
                                                     in runState (f v) s')) w
               in runState (g u) w')
 
 <==> def. runState
 
-State (\w -> 
-    let (u :!: w') = (\s -> let (v :!: s') = runState t s 
+State (λw -> 
+    let (u :!: w') = (λs -> let (v :!: s') = runState t s 
                                       in runState (f v) s') w
     in runState (g u) w')
 
-<==> β-red
+<==> β-red y α-conversión
 
-State (\w -> 
-    let (u :!: w') = let (v :!: s') = runState t w 
+State (λs -> 
+    let (u :!: w') = let (v :!: s') = runState t s
                       in runState (f v) s'
     in runState (g u) w')
 
-Si arrancamos del otro lado de la igualdad:
-
-REMEMBER: m >>= f = State (\s -> let (v :!: s') = runState m s 
-                       in runState (f v) s')
+Por practicidad, podemos arrancar del otro lado de la igualdad y ver si llegamos a lo mismo:
                        
 t >>= (λx. f x >>= g)
 
-<==> def. >>=
-State (\s -> let (v :!: s') = runState t s 
+<==> {def. >>=, tomando v y s' ∉ (FV(f) ∪ FV(λx. f x) ∪ FV(g))} (1)
+
+State (λs -> let (v :!: s') = runState t s 
                        in runState ((λx. f x >>= g) v) s')
 
 <==> β-redux
 
-State (\s -> let (v :!: s') = runState t s 
+State (λs -> let (v :!: s') = runState t s 
               in runState (f v >>= g)  s') 
 
 <==> def. >>= 
-State (\s -> let (v :!: s') = runState t s 
-              in runState (State (\w -> let (u :!: w') = runState (f v) w 
+State (λs -> let (v :!: s') = runState t s 
+              in runState (State (λw -> let (u :!: w') = runState (f v) w 
                                         in runState (g u) w')
                           )  s')
 
 <==> def. runState
 
-State (\s -> let (v :!: s') = runState t s 
-              in (\w -> let (u :!: w') = runState (f v) w 
+State (λs -> let (v :!: s') = runState t s 
+              in (λw -> let (u :!: w') = runState (f v) w 
                         in runState (g u) w') s')
 
 <==> β-redux
 
-State (\s -> let (v :!: s') = runState t s 
+State (λs -> let (v :!: s') = runState t s 
               in  let (u :!: w') = runState (f v) s' 
                   in runState (g u) w'
 
+{
 Propiedad let:
 let x = let y = f
         in h y
@@ -165,20 +158,19 @@ in g x
 let y = f 
 in let x = h y
    in g x
+}
 
-Podemos ver (???) que (v :!: s') not in FV(runState (g u) w') entonces nos queda:
+Por (1) podemos ver que (v :!: s') ∉ FV(runState (g u) w') (ya que esta expresión se derivó de las iniciales),
+entonces nos queda:
 
 <==> Propiedad de Let enunciada
 
-DAR VUELTA
-State (\s -> let (v :!: s') = runState t s 
-              in  let (u :!: w') = runState (f v) s' 
-                  in runState (g u) w'
+State (λs -> 
+    let (u :!: w') = let (v :!: s') = runState t s 
+                      in runState (f v) s'
+    in runState (g u) w')
 
-Uniendo ambos caminos, queda demostrado.           
-∎ (t >>= f) >>= g  =  t >>= (λx. f x >>= g)
+Hemos llegado a lo mismo desde ambos lados de igualdad, por lo queda demostrado.           
+∎
 
-
-
-(f x) ==== (\y. f y) x --> contrario de beta
 
